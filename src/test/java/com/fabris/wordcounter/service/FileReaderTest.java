@@ -8,8 +8,8 @@ import static org.mockito.Mockito.*;
 
 class FileReaderTest {
 
-    private LineWriter lineWriter = mock(LineWriter.class);
-    private WordCounter wordCounter = mock(WordCounter.class);
+    private LineWriterFuture lineWriter = mock(LineWriterFuture.class);
+    private WordCounterFuture wordCounter = mock(WordCounterFuture.class);
 
     private FileReader service = new FileReader(lineWriter, wordCounter);
 
