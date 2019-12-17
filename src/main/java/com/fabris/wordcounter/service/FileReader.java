@@ -1,6 +1,5 @@
 package com.fabris.wordcounter.service;
 
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -10,38 +9,32 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.ExecutionException;
 
 @Service
 public class FileReader {
 
     private Logger logger = LoggerFactory.getLogger(FileReader.class);
 
-    private LineWriterFuture lineWriter;
-    private WordCounterFuture wordCounter;
+    private LineWriter lineWriter;
 
-    public FileReader(LineWriterFuture lineWriter, WordCounterFuture wordCounter) {
+    public FileReader(LineWriter lineWriter) {
         this.lineWriter = lineWriter;
-        this.wordCounter = wordCounter;
     }
 
-    public void readFile(String filePath) throws IOException {
+    public Boolean readFile(String filePath) throws IOException {
         LocalDateTime start = LocalDateTime.now();
         Files
                 .lines(Path.of(filePath))
                 .parallel()
                 .forEach(line -> {
-                    try {
-                        ObjectId newLineId = lineWriter.writeLine(line).get();
-                        wordCounter.countWordsAndSave(newLineId);
-                    } catch (InterruptedException e) {
-                       logger.error("Interruption during async call", e);
-                    } catch (ExecutionException e) {
-                        logger.error("Execution error during async call", e);
+                    if (!line.isBlank()) {
+                        logger.debug("Invoking linewriter for line " + line);
+                        lineWriter.writeLine(line);
                     }
                 });
         LocalDateTime end = LocalDateTime.now();
         Duration duration = Duration.between(start, end);
         logger.info("Reading took " + duration.toMillis() + " ms");
+        return true;
     }
 }

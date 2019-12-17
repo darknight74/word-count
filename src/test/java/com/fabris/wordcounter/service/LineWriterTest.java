@@ -1,5 +1,6 @@
 package com.fabris.wordcounter.service;
 
+import com.fabris.wordcounter.configuration.ApplicationSharedValues;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -23,22 +24,32 @@ class LineWriterTest {
 
     @BeforeEach
     private void setUp() {
-        MongoDatabase database = mongoClient.getDatabase("wordcount");
-        database.getCollection("lines").drop();
+        MongoDatabase database = mongoClient.getDatabase(ApplicationSharedValues.DATABASE_NAME);
+        database.getCollection(ApplicationSharedValues.LINES_COLLECTION).drop();
+        database.getCollection(ApplicationSharedValues.QUEUE_COLLECTION).drop();
     }
 
     @Test
     void writeLine() {
         String line = "This is a line of text";
         ObjectId id = service.writeLine(line);
-        MongoDatabase database = mongoClient.getDatabase("wordcount");
-        MongoCollection linesCollection = database.getCollection("lines");
-        List<Document> result = new ArrayList<>();
-        linesCollection.find(new Document()).into(result);
-        assertFalse(result.isEmpty());
-        assertEquals(1, result.size());
-        assertEquals(line, result.get(0).getString("content"));
-        assertTrue(result.get(0).getDate("time").before(new Date()));
-        assertEquals(id, result.get(0).getObjectId("_id"));
+        MongoDatabase database = mongoClient.getDatabase(ApplicationSharedValues.DATABASE_NAME);
+        MongoCollection<Document> linesCollection = database.getCollection(ApplicationSharedValues.LINES_COLLECTION);
+        MongoCollection<Document> queueCollection = database.getCollection(ApplicationSharedValues.QUEUE_COLLECTION);
+        List<Document> lines = new ArrayList<>();
+        linesCollection.find().into(lines);
+        assertFalse(lines.isEmpty());
+        assertEquals(1, lines.size());
+        Document lineDocument = lines.get(0);
+        assertEquals(line, lineDocument.getString("content"));
+        assertTrue(lineDocument.getDate("time").before(new Date()));
+        assertEquals(id, lineDocument.getObjectId("_id"));
+        List<Document> queueEntries = new ArrayList<>();
+        queueCollection.find().into(queueEntries);
+        assertFalse(queueEntries.isEmpty());
+        assertEquals(1, queueEntries.size());
+        Document queueEntry = queueEntries.get(0);
+        assertNull(queueEntry.getDate("elaborationTime"));
+        assertEquals(id, queueEntry.getObjectId("lineId"));
     }
 }

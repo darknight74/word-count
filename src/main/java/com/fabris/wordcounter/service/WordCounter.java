@@ -1,5 +1,6 @@
 package com.fabris.wordcounter.service;
 
+import com.fabris.wordcounter.configuration.ApplicationSharedValues;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -17,9 +18,9 @@ public class WordCounter {
         this.mongoClient = mongoClient;
     }
 
-    public void countWordsAndSave(ObjectId newLineId) {
-        MongoDatabase database = mongoClient.getDatabase("wordcount");
-        MongoCollection<Document> lines = database.getCollection("lines");
+    public void countWordsAndSave(ObjectId lineId) {
+        MongoDatabase database = mongoClient.getDatabase(ApplicationSharedValues.DATABASE_NAME);
+        MongoCollection<Document> lines = database.getCollection(ApplicationSharedValues.LINES_COLLECTION);
         String mapFunction = "function() {\n" +
                 "    var line = this.content;\n" +
                 "    if (line) {\n" +
@@ -34,18 +35,15 @@ public class WordCounter {
                 "};";
 
         String reduceFunction = "function(key, values) {\n" +
-                "    var count = 0;\n" +
-                "    values.forEach(function(v) {\n" +
-                "        count +=v;\n" +
-                "    });\n" +
-                "    return count;\n" +
+               "    return Array.sum(values)\n" +
                 "}";
 
-        Document filter = new Document().append("_id", newLineId);
+
+        Document filter = new Document().append("_id",lineId);
         lines.mapReduce(mapFunction, reduceFunction)
-                .action(MapReduceAction.MERGE)
+                .action(MapReduceAction.REDUCE)
                 .filter(filter)
-                .collectionName("words")
+                .collectionName(ApplicationSharedValues.WORDS_COLLECTION)
                 .toCollection();
     }
 }
