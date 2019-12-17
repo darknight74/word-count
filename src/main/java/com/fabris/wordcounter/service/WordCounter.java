@@ -41,8 +41,11 @@ public class WordCounter {
                 "    return count;\n" +
                 "}";
 
+        Document filter = new Document().append("_id", newLineId);
         lines.mapReduce(mapFunction, reduceFunction)
                 .action(MapReduceAction.MERGE)
-                .collectionName("words").toCollection();
+                .filter(filter)
+                .collectionName("words")
+                .toCollection();
     }
 }
