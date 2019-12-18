@@ -1,6 +1,8 @@
 package com.fabris.wordcounter.service;
 
+import com.fabris.wordcounter.configuration.ApplicationSharedValues;
 import org.bson.types.ObjectId;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -10,8 +12,9 @@ import static org.mockito.Mockito.*;
 class FileReaderTest {
 
     private LineWriter lineWriter = mock(LineWriter.class);
+    private ApplicationSharedValues configuration = new ApplicationSharedValues();
 
-    private FileReader service = new FileReader(lineWriter);
+    private FileReader service = new FileReader(lineWriter, configuration);
 
     @Test
     void readFile() throws IOException {

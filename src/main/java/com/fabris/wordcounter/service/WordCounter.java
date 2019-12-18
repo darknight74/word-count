@@ -7,18 +7,30 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.MapReduceAction;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 @Service
 public class WordCounter {
 
     private MongoClient mongoClient;
 
+    private Logger logger = LoggerFactory.getLogger(WordCounter.class);
+
     public WordCounter(MongoClient mongoClient) {
         this.mongoClient = mongoClient;
     }
 
-    public void countWordsAndSave(ObjectId lineId) {
+    @RabbitListener(queues = "lines-to-be-counted")
+    public void countWordsAndSave(String lineId) {
+        logger.debug("Received message for line " + lineId);
+        LocalDateTime start = LocalDateTime.now();
+
         MongoDatabase database = mongoClient.getDatabase(ApplicationSharedValues.DATABASE_NAME);
         MongoCollection<Document> lines = database.getCollection(ApplicationSharedValues.LINES_COLLECTION);
         String mapFunction = "function() {\n" +
@@ -39,11 +51,15 @@ public class WordCounter {
                 "}";
 
 
-        Document filter = new Document().append("_id",lineId);
+        Document filter = new Document().append("_id", new ObjectId(lineId));
         lines.mapReduce(mapFunction, reduceFunction)
                 .action(MapReduceAction.REDUCE)
                 .filter(filter)
                 .collectionName(ApplicationSharedValues.WORDS_COLLECTION)
                 .toCollection();
+
+        LocalDateTime end = LocalDateTime.now();
+        Duration duration = Duration.between(start, end);
+        logger.info("Counting took " + duration.toMillis() + " ms");
     }
 }
