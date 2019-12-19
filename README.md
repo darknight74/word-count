@@ -29,7 +29,7 @@ Once the count ends, the master node prints out the result on the command line
 It's possible at any time to query the current result using the provided endpoint `/count` on any server: all servers start with random port but is possible to bound them to a specific port using the switch `--server.port`
 
 ## Notes
-Included tests need running MongoDB and RabbitMQ server to pass: a docker-compose file is included to simply startup those services for testing purpose.
+Included tests need running MongoDB and RabbitMQ server to pass: a docker-compose file is included to simply startup manually those services for testing purpose. A better solution is to integrate docker-compose in the maven file using specific plugins.
 
 I originally thought to use a queue implemented in MongoDB using a specific collection reading jobs using the findOneAndUpdate method but this was a slow solution due to locks in MongoDB.
 
