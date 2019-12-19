@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,7 +33,7 @@ public class ApplicationIntegrationTest {
     private FileReader fileReader;
 
     @Autowired
-    private OutputGenerator outputGenerator;
+    private CheckingOutputGenerator outputGenerator;
 
     @Autowired
     private MongoClient mongoClient;
@@ -49,7 +50,7 @@ public class ApplicationIntegrationTest {
     @Test
     public void test() throws IOException, InterruptedException {
         fileReader.readFile("./src/test/resources/testFileSmall.txt");
-        Thread.sleep(5000);
+        TimeUnit.SECONDS.sleep(5);
         List<Document> result = new ArrayList<>();
         MongoDatabase database = mongoClient.getDatabase(ApplicationSharedValues.DATABASE_NAME);
         MongoCollection<Document> words = database.getCollection(ApplicationSharedValues.WORDS_COLLECTION);

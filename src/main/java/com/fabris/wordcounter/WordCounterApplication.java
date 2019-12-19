@@ -1,5 +1,6 @@
 package com.fabris.wordcounter;
 
+import com.fabris.wordcounter.service.CheckingOutputGenerator;
 import com.fabris.wordcounter.service.FileReader;
 import com.fabris.wordcounter.service.OutputGenerator;
 import com.fabris.wordcounter.service.ResourceCleanup;
@@ -19,13 +20,13 @@ import java.util.concurrent.*;
 public class WordCounterApplication implements ApplicationRunner {
 
     private final FileReader fileReader;
-    private final OutputGenerator outputGenerator;
+    private final CheckingOutputGenerator outputGenerator;
     private final ResourceCleanup resourceCleanup;
 
     private Logger logger = LoggerFactory.getLogger(WordCounterApplication.class);
 
     public WordCounterApplication(FileReader fileReader,
-                                  OutputGenerator outputGenerator,
+                                  CheckingOutputGenerator outputGenerator,
                                   ResourceCleanup resourceCleanup) {
         this.fileReader = fileReader;
         this.outputGenerator = outputGenerator;
@@ -44,6 +45,7 @@ public class WordCounterApplication implements ApplicationRunner {
             resourceCleanup.cleanUp();
 
             fileReader.readFile(args.getOptionValues("source").get(0));
+            TimeUnit.SECONDS.sleep(5);
             logger.info("stats: " + outputGenerator.calculateStats());
 
             LocalDateTime end = LocalDateTime.now();

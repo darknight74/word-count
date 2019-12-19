@@ -28,7 +28,8 @@ class LineWriterTest {
     private MongoClient mongoClient = MongoClients.create();
 
     private AmqpTemplate messagingTemplate = mock(AmqpTemplate.class);
-    private LineWriter service = new LineWriter(mongoClient, messagingTemplate);
+    private RabbitConfiguration configuration = new RabbitConfiguration();
+    private LineWriter service = new LineWriter(mongoClient, messagingTemplate, configuration);
 
     @BeforeEach
     private void setUp() {
@@ -52,7 +53,8 @@ class LineWriterTest {
         assertEquals(id, lineDocument.getObjectId("_id"));
         verify(messagingTemplate, new Times(1))
                 .send(
-                        eq(RabbitConfiguration.LINES_TO_BE_COUNTED_QUEUE),
+                        eq(configuration.getExchange()),
+                        eq(configuration.getQueue()),
                         eq(MessageBuilder.withBody(id.toString().getBytes()).build()));
     }
 }

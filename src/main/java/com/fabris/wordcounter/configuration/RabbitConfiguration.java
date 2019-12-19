@@ -3,7 +3,6 @@ package com.fabris.wordcounter.configuration;
 import com.rabbitmq.http.client.Client;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -22,13 +21,16 @@ import java.net.URISyntaxException;
 @Validated
 public class RabbitConfiguration {
 
-    public static final String LINES_TO_BE_COUNTED_QUEUE = "lines-to-be-counted";
+    private String exchange;
 
     @NotNull
-    private String host;
+    private String queue;
 
     @NotNull
-    private Integer port;
+    private String addresses;
+
+    @NotNull
+    private String adminHost;
 
     @NotNull
     private Integer adminPort;
@@ -42,8 +44,8 @@ public class RabbitConfiguration {
 
     @Bean
     public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(host);
-        connectionFactory.setPort(port);
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+        connectionFactory.setAddresses(addresses);
         connectionFactory.setUsername(user);
         connectionFactory.setPassword(password);
         return connectionFactory;
@@ -61,28 +63,20 @@ public class RabbitConfiguration {
 
     @Bean
     public Queue linesToBeCountedQueue() {
-        return new Queue(LINES_TO_BE_COUNTED_QUEUE);
+        return new Queue(queue);
     }
 
     @Bean
     public Client rabbitAdminClient() throws MalformedURLException, URISyntaxException {
-        return new Client("http://" + host + ":" + adminPort + "/api/", user, password);
+        return new Client("http://" + adminHost + ":" + adminPort + "/api/", user, password);
     }
 
-    public String getHost() {
-        return host;
+    public String getAdminHost() {
+        return this.adminHost;
     }
 
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public Integer getPort() {
-        return port;
-    }
-
-    public void setPort(Integer port) {
-        this.port = port;
+    public void setAdminHost(String host) {
+        this.adminHost = host;
     }
 
     public Integer getAdminPort() {
@@ -107,5 +101,29 @@ public class RabbitConfiguration {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getAddresses() {
+        return this.addresses;
+    }
+
+    public void setAddresses(String addresses) {
+        this.addresses = addresses;
+    }
+
+    public String getQueue() {
+        return this.queue;
+    }
+
+    public void setQueue(String queue) {
+        this.queue = queue;
+    }
+
+    public String getExchange() {
+        return exchange;
+    }
+
+    public void setExchange(String exchange) {
+        this.exchange = exchange;
     }
 }

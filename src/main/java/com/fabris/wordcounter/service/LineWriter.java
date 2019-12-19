@@ -10,7 +10,6 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
@@ -26,10 +25,12 @@ public class LineWriter {
 
     private MongoClient mongoClient;
     private AmqpTemplate messagingTemplate;
+    private RabbitConfiguration configuration;
 
-    public LineWriter(MongoClient mongoClient, AmqpTemplate messagingTemplate) {
+    public LineWriter(MongoClient mongoClient, AmqpTemplate messagingTemplate, RabbitConfiguration configuration) {
         this.mongoClient = mongoClient;
         this.messagingTemplate = messagingTemplate;
+        this.configuration = configuration;
     }
 
     public ObjectId writeLine(String line) {
@@ -45,14 +46,15 @@ public class LineWriter {
         logger.debug("ObjectId of new document: " + documentLineId);
 
         messagingTemplate.send(
-                RabbitConfiguration.LINES_TO_BE_COUNTED_QUEUE,
+                configuration.getExchange(),
+                configuration.getQueue(),
                 MessageBuilder
                         .withBody(documentLineId.toString().getBytes())
                         .build());
         logger.debug("Finished writing line " + line + " with ObjectId " + documentLineId);
         LocalDateTime end = LocalDateTime.now();
         Duration duration = Duration.between(start, end);
-        logger.info("Write line took " + duration.toMillis() + " ms");
+        logger.debug("Write line took " + duration.toMillis() + " ms");
         return documentLineId;
     }
 

@@ -1,6 +1,7 @@
 package com.fabris.wordcounter.service;
 
 import com.fabris.wordcounter.configuration.ApplicationSharedValues;
+import com.fabris.wordcounter.configuration.RabbitConfiguration;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -9,6 +10,9 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.Argument;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +30,7 @@ public class WordCounter {
         this.mongoClient = mongoClient;
     }
 
-    @RabbitListener(queues = "lines-to-be-counted")
+    @RabbitListener(queues = "${rabbit.queue}")
     public void countWordsAndSave(String lineId) {
         logger.debug("Received message for line " + lineId);
         LocalDateTime start = LocalDateTime.now();
@@ -60,6 +64,6 @@ public class WordCounter {
 
         LocalDateTime end = LocalDateTime.now();
         Duration duration = Duration.between(start, end);
-        logger.info("Counting took " + duration.toMillis() + " ms");
+        logger.debug("Counting took " + duration.toMillis() + " ms");
     }
 }

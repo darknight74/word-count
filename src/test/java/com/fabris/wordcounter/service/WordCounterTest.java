@@ -1,6 +1,7 @@
 package com.fabris.wordcounter.service;
 
 import com.fabris.wordcounter.configuration.ApplicationSharedValues;
+import com.fabris.wordcounter.configuration.RabbitConfiguration;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -23,7 +24,8 @@ class WordCounterTest {
 
     private WordCounter wordCounter = new WordCounter(mongoClient);
     private AmqpTemplate messagingTemplate = mock(AmqpTemplate.class);
-    private LineWriter lineWriter = new LineWriter(mongoClient, messagingTemplate);
+    private RabbitConfiguration configuration = new RabbitConfiguration();
+    private LineWriter lineWriter = new LineWriter(mongoClient, messagingTemplate, configuration);
 
     @BeforeEach
     private void setUp() {
