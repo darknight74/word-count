@@ -2,10 +2,10 @@ package com.fabris.wordcounter.service;
 
 import com.fabris.wordcounter.configuration.ApplicationSharedValues;
 import org.bson.types.ObjectId;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import static org.mockito.Mockito.*;
 
@@ -17,7 +17,7 @@ class FileReaderTest {
     private FileReader service = new FileReader(lineWriter, configuration);
 
     @Test
-    void readFile() throws IOException {
+    void readFile() throws IOException, ExecutionException, InterruptedException {
         when(lineWriter.writeLine(any()))
                 .thenReturn(new ObjectId());
         service.readFile("./src/test/resources/testFileSmall.txt");

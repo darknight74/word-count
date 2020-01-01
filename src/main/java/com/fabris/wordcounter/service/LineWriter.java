@@ -1,7 +1,7 @@
 package com.fabris.wordcounter.service;
 
 import com.fabris.wordcounter.configuration.ApplicationSharedValues;
-import com.fabris.wordcounter.configuration.RabbitConfiguration;
+import com.fabris.wordcounter.configuration.KafkaConfiguration;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -9,14 +9,13 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.MessageBuilder;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class LineWriter {
@@ -24,16 +23,16 @@ public class LineWriter {
     private Logger logger = LoggerFactory.getLogger(LineWriter.class);
 
     private MongoClient mongoClient;
-    private AmqpTemplate messagingTemplate;
-    private RabbitConfiguration configuration;
+    private KafkaConfiguration configuration;
+    private KafkaTemplate<String, String> kafkaTemplate;
 
-    public LineWriter(MongoClient mongoClient, AmqpTemplate messagingTemplate, RabbitConfiguration configuration) {
+    public LineWriter(MongoClient mongoClient, KafkaTemplate messagingTemplate, KafkaConfiguration configuration) {
         this.mongoClient = mongoClient;
-        this.messagingTemplate = messagingTemplate;
+        this.kafkaTemplate = messagingTemplate;
         this.configuration = configuration;
     }
 
-    public ObjectId writeLine(String line) {
+    public ObjectId writeLine(String line) throws ExecutionException, InterruptedException {
         LocalDateTime start = LocalDateTime.now();
         MongoDatabase database = mongoClient.getDatabase(ApplicationSharedValues.DATABASE_NAME);
 
@@ -45,12 +44,8 @@ public class LineWriter {
 
         logger.debug("ObjectId of new document: " + documentLineId);
 
-        messagingTemplate.send(
-                configuration.getExchange(),
-                configuration.getQueue(),
-                MessageBuilder
-                        .withBody(documentLineId.toString().getBytes())
-                        .build());
+        kafkaTemplate.send(configuration.getDestination(), documentLineId.toString()).get();
+
         logger.debug("Finished writing line " + line + " with ObjectId " + documentLineId);
         LocalDateTime end = LocalDateTime.now();
         Duration duration = Duration.between(start, end);

@@ -2,7 +2,6 @@ package com.fabris.wordcounter;
 
 import com.fabris.wordcounter.service.CheckingOutputGenerator;
 import com.fabris.wordcounter.service.FileReader;
-import com.fabris.wordcounter.service.OutputGenerator;
 import com.fabris.wordcounter.service.ResourceCleanup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,10 +10,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.*;
 
 @SpringBootApplication
 public class WordCounterApplication implements ApplicationRunner {
@@ -45,8 +42,6 @@ public class WordCounterApplication implements ApplicationRunner {
             resourceCleanup.cleanUp();
 
             fileReader.readFile(args.getOptionValues("source").get(0));
-            TimeUnit.SECONDS.sleep(5);
-            logger.info("stats: " + outputGenerator.calculateStats());
 
             LocalDateTime end = LocalDateTime.now();
             Duration duration = Duration.between(start, end);

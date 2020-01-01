@@ -1,7 +1,7 @@
 package com.fabris.wordcounter.service;
 
 import com.fabris.wordcounter.configuration.ApplicationSharedValues;
-import com.fabris.wordcounter.configuration.RabbitConfiguration;
+import com.fabris.wordcounter.configuration.KafkaConfiguration;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -10,10 +10,11 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -23,8 +24,8 @@ class WordCounterTest {
     private MongoClient mongoClient = MongoClients.create();
 
     private WordCounter wordCounter = new WordCounter(mongoClient);
-    private AmqpTemplate messagingTemplate = mock(AmqpTemplate.class);
-    private RabbitConfiguration configuration = new RabbitConfiguration();
+    private KafkaTemplate messagingTemplate = mock(KafkaTemplate.class);
+    private KafkaConfiguration configuration = new KafkaConfiguration();
     private LineWriter lineWriter = new LineWriter(mongoClient, messagingTemplate, configuration);
 
     @BeforeEach
@@ -35,7 +36,7 @@ class WordCounterTest {
     }
 
     @Test
-    void countWordsAndSave() throws InterruptedException {
+    void countWordsAndSave() throws InterruptedException, ExecutionException {
         MongoDatabase database = mongoClient.getDatabase("wordcount");
         String firstLineToCount = "This is one line with more than one word we want to count";
         ObjectId lineId = lineWriter.writeLine(firstLineToCount);

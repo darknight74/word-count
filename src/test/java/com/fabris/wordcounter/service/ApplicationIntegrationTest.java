@@ -7,12 +7,10 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.internal.verification.Times;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
@@ -22,8 +20,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 
 @SpringBootTest()
 @ActiveProfiles("integrationtest")
@@ -33,7 +29,7 @@ public class ApplicationIntegrationTest {
     private FileReader fileReader;
 
     @Autowired
-    private CheckingOutputGenerator outputGenerator;
+    private OutputGenerator outputGenerator;
 
     @Autowired
     private MongoClient mongoClient;
@@ -50,7 +46,7 @@ public class ApplicationIntegrationTest {
     @Test
     public void test() throws IOException, InterruptedException {
         fileReader.readFile("./src/test/resources/testFileSmall.txt");
-        TimeUnit.SECONDS.sleep(5);
+        TimeUnit.SECONDS.sleep(15);
         List<Document> result = new ArrayList<>();
         MongoDatabase database = mongoClient.getDatabase(ApplicationSharedValues.DATABASE_NAME);
         MongoCollection<Document> words = database.getCollection(ApplicationSharedValues.WORDS_COLLECTION);

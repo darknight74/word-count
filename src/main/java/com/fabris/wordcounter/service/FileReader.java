@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -33,11 +34,13 @@ public class FileReader {
                 .forEach(line -> {
                     if (!line.isBlank()) {
                         logger.debug("Invoking linewriter for line " + line);
-                        lineWriter.writeLine(line);
                         try {
+                            lineWriter.writeLine(line);
                             TimeUnit.MILLISECONDS.sleep(configuration.getReadWaitMillis());
                         } catch (InterruptedException e) {
-                            logger.error("Line thread sleep interrupted", e);
+                            logger.error("Line thread interrupted", e);
+                        } catch (ExecutionException e) {
+                            logger.error("Line thread interrupted", e);
                         }
                     }
                 });

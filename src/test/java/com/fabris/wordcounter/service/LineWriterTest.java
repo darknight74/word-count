@@ -1,7 +1,7 @@
 package com.fabris.wordcounter.service;
 
 import com.fabris.wordcounter.configuration.ApplicationSharedValues;
-import com.fabris.wordcounter.configuration.RabbitConfiguration;
+import com.fabris.wordcounter.configuration.KafkaConfiguration;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -11,12 +11,12 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.verification.Times;
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
@@ -27,8 +27,8 @@ class LineWriterTest {
 
     private MongoClient mongoClient = MongoClients.create();
 
-    private AmqpTemplate messagingTemplate = mock(AmqpTemplate.class);
-    private RabbitConfiguration configuration = new RabbitConfiguration();
+    private KafkaTemplate messagingTemplate = mock(KafkaTemplate.class);
+    private KafkaConfiguration configuration = new KafkaConfiguration();
     private LineWriter service = new LineWriter(mongoClient, messagingTemplate, configuration);
 
     @BeforeEach
@@ -38,7 +38,7 @@ class LineWriterTest {
     }
 
     @Test
-    void writeLine() {
+    void writeLine() throws ExecutionException, InterruptedException {
         String line = "This is a line of text";
         ObjectId id = service.writeLine(line);
         MongoDatabase database = mongoClient.getDatabase(ApplicationSharedValues.DATABASE_NAME);
@@ -53,8 +53,7 @@ class LineWriterTest {
         assertEquals(id, lineDocument.getObjectId("_id"));
         verify(messagingTemplate, new Times(1))
                 .send(
-                        eq(configuration.getExchange()),
-                        eq(configuration.getQueue()),
-                        eq(MessageBuilder.withBody(id.toString().getBytes()).build()));
+                        eq(configuration.getDestination()),
+                        eq(id.toString()));
     }
 }
